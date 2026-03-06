@@ -1,0 +1,175 @@
+═══════════════════════════════════════════════════════════════════
+  📱 FRONTEND vs 🖥️  BACKEND - CONNECTION VERIFICATION GUIDE
+═══════════════════════════════════════════════════════════════════
+
+🎯 HOW TO VERIFY CONNECTION ON BOTH SIDES
+
+
+┌─────────────────────────────────────────────────────────────────┐
+│  📱 ON YOUR PHONE (EXPO GO APP)                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+✅ SIGNS THE BACKEND IS CONNECTED:
+
+  1. APP LOADS SUCCESSFULLY
+     • No "Network Error" message
+     • No "Cannot connect to server" alert
+     • App shows login/register screen
+
+  2. REGISTRATION WORKS
+     • Enter name, phone, password
+     • Tap "Register"
+     • ✅ You get logged in (no error)
+     • See home screen / dashboard
+
+  3. AI SYMPTOM AGENT RESPONDS
+     • Navigate to "Symptom Checker" or "Report Symptoms"
+     • Type: "I have a headache on the left side"
+     • ✅ AI agent responds with a question
+     • You can see the conversation happening
+
+  4. PROFILE LOADS
+     • Check your profile section
+     • ✅ Your name and details appear
+     
+
+❌ SIGNS THE BACKEND IS NOT CONNECTED:
+
+  • "Network Request Failed" error
+  • "Unable to connect to server" 
+  • App freezes when trying to register
+  • Symptom checker doesn't respond
+  • Spinning loader forever
+
+
+┌─────────────────────────────────────────────────────────────────┐
+│  🖥️  ON YOUR PC (BACKEND SERVER LOGS)                          │
+└─────────────────────────────────────────────────────────────────┘
+
+✅ SIGNS THE FRONTEND IS CONNECTED:
+
+Look at the PowerShell window running the backend. You'll see:
+
+  INFO:     192.168.31.XX:XXXXX - "GET /health HTTP/1.1" 200 OK
+  INFO:     192.168.31.XX:XXXXX - "POST /api/auth/register HTTP/1.1" 201 Created
+  INFO:     192.168.31.XX:XXXXX - "POST /api/auth/login HTTP/1.1" 200 OK
+  INFO:     192.168.31.XX:XXXXX - "GET /api/auth/me HTTP/1.1" 200 OK
+  INFO:     192.168.31.XX:XXXXX - "POST /api/consultation/start HTTP/1.1" 201 Created
+  INFO:     192.168.31.XX:XXXXX - "POST /api/symptom-agent/start HTTP/1.1" 201 Created
+  INFO:     192.168.31.XX:XXXXX - "POST /api/symptom-agent/{id}/respond HTTP/1.1" 200 OK
+
+  Each line = 1 request from your phone!
+  The IP (192.168.31.XX) is your phone's IP address
+
+
+❌ SIGNS THE FRONTEND IS NOT CONNECTED:
+
+  • Backend logs are completely silent (no new lines)
+  • You don't see any requests with timestamps
+  • No 192.168.31.XX IP addresses appear
+
+
+┌─────────────────────────────────────────────────────────────────┐
+│  🧪 TEST CONNECTION RIGHT NOW                                   │
+└─────────────────────────────────────────────────────────────────┘
+
+STEP 1: Position Your Windows
+  • Backend logs window → Left side of screen
+  • This guide → Right side of screen
+
+STEP 2: Run the simulator
+  • Opens: C:\Users\atmaj\Desktop\SwasthyaSaathi\backend
+  • Run: python monitor_connection.py
+  • This simulates what your phone does
+
+STEP 3: Watch Both Sides
+  • Terminal output = What frontend does
+  • Backend logs = What backend receives
+
+STEP 4: Test on Real Phone
+  • Open Expo Go on your phone
+  • Scan the QR code
+  • Try registering
+  • Watch backend logs for activity!
+
+
+┌─────────────────────────────────────────────────────────────────┐
+│  🔧 TROUBLESHOOTING                                             │
+└─────────────────────────────────────────────────────────────────┘
+
+IF FRONTEND SHOWS ERRORS BUT BACKEND WORKS ON PC:
+
+  ❌ Problem: Phone can't reach backend
+  ✅ Solution:
+     1. Verify both on SAME WiFi network
+     2. Check IP hasn't changed: ipconfig
+     3. Update frontend config if IP changed:
+        • File: frontend/Swasthya/src/services/api.ts
+        • Change: BASE_URL = 'http://YOUR_NEW_IP:8000'
+     4. Check Windows Firewall allows port 8000
+     5. Try accessing from phone browser: http://192.168.31.66:8000/health
+
+
+IF BACKEND LOGS ARE SILENT:
+
+  ❌ Problem: Requests not reaching backend
+  ✅ Solution:
+     1. Backend might not be running
+        • Check for uvicorn process
+        • Restart backend server
+     2. Frontend might be using wrong URL
+        • Check api.ts file
+     3. Network issue between devices
+
+
+IF BOTH SEEM FINE BUT APP CRASHES:
+
+  ❌ Problem: API response format issue
+  ✅ Solution:
+     1. Check backend logs for errors (red text)
+     2. Check frontend console in Expo Dev Tools
+     3. Test endpoints manually with test_connection.py
+
+
+┌─────────────────────────────────────────────────────────────────┐
+│  ⚡ QUICK COMMANDS                                              │
+└─────────────────────────────────────────────────────────────────┘
+
+# Test connection from PC (simulates phone)
+cd C:\Users\atmaj\Desktop\SwasthyaSaathi\backend
+python monitor_connection.py
+
+# Check if backend is accessible
+curl http://192.168.31.66:8000/health
+
+# Check your current IP
+ipconfig | findstr "IPv4"
+
+# View current config
+type C:\Users\atmaj\Desktop\SwasthyaSaathi\frontend\Swasthya\src\services\api.ts | findstr "BASE_URL"
+
+
+┌─────────────────────────────────────────────────────────────────┐
+│  ✅ CHECKLIST                                                   │
+└─────────────────────────────────────────────────────────────────┘
+
+Backend Side:
+  □ Backend server is running (check PowerShell window)
+  □ Can access http://192.168.31.66:8000/health from PC
+  □ Firewall allows port 8000
+  □ Backend logs show server is ready
+
+Frontend Side:
+  □ Expo server is running (check other PowerShell window)
+  □ QR code is displayed
+  □ api.ts has correct IP: http://192.168.31.66:8000
+  □ Phone is on same WiFi as PC
+
+Connection:
+  □ Can access backend from PC browser
+  □ Phone can scan QR code
+  □ App loads on phone without network error
+  □ Backend logs show incoming requests when using app
+
+
+═══════════════════════════════════════════════════════════════════

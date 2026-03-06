@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwasthyaSaathi AI Health Assistant - Product Requirements Document</title>
+    <style>
+        @page {
+            margin: 2cm;
+            size: A4;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #fff;
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .cover-page {
+            text-align: center;
+            padding: 100px 0;
+            page-break-after: always;
+            border: 3px solid #007AFF;
+            border-radius: 10px;
+            margin-bottom: 50px;
+        }
+        .cover-page h1 {
+            font-size: 48px;
+            color: #007AFF;
+            margin-bottom: 20px;
+        }
+        .cover-page h2 {
+            font-size: 32px;
+            color: #666;
+            font-weight: 300;
+            margin-bottom: 40px;
+        }
+        .cover-page .metadata {
+            margin-top: 60px;
+            font-size: 18px;
+            color: #888;
+        }
+        h1 {
+            color: #007AFF;
+            font-size: 36px;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #007AFF;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #0066CC;
+            font-size: 28px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        h3 {
+            color: #333;
+            font-size: 22px;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+        h4 {
+            color: #555;
+            font-size: 18px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        ul, ol {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        th {
+            background: #007AFF;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        tr:hover {
+            background: #f5f5f5;
+        }
+        .priority-p0 {
+            background: #ff4444;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .priority-p1 {
+            background: #ffaa00;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .priority-p2 {
+            background: #4CAF50;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .severity-mild {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        .severity-moderate {
+            color: #ffaa00;
+            font-weight: bold;
+        }
+        .severity-emergency {
+            color: #ff4444;
+            font-weight: bold;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border-left: 4px solid #007AFF;
+        }
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .warning-box {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .success-box {
+            background: #e8f5e9;
+            border-left: 4px solid #4CAF50;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .toc {
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 8px;
+            margin: 30px 0;
+        }
+        .toc h2 {
+            color: #007AFF;
+            margin-bottom: 20px;
+        }
+        .toc ul {
+            list-style: none;
+            margin-left: 0;
+        }
+        .toc li {
+            margin-bottom: 10px;
+        }
+        .toc a {
+            color: #0066CC;
+            text-decoration: none;
+            font-size: 16px;
+        }
+        .toc a:hover {
+            text-decoration: underline;
+        }
+        .section-divider {
+            height: 3px;
+            background: linear-gradient(to right, #007AFF, #00C6FF);
+            margin: 40px 0;
+            border-radius: 2px;
+        }
+        @media print {
+            body {
+                padding: 0;
+            }
+            .cover-page {
+                page-break-before: always;
+            }
+            h1, h2, h3 {
+                page-break-after: avoid;
+            }
+            table {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="cover-page">
+        <h1>🏥 SwasthyaSaathi</h1>
+        <h2>AI Health Assistant Agent</h2>
+        <h3 style="color: #007AFF; margin-top: 40px;">Product Requirements Document</h3>
+        <div class="metadata">
+            <p><strong>Version:</strong> 1.0</p>
+            <p><strong>Date:</strong> March 5, 2026</p>
+            <p><strong>Status:</strong> Working Prototype → Production Ready</p>
+            <p style="margin-top: 40px;"><em>"Making Quality Healthcare Accessible to Every Indian"</em></p>
+        </div>
+    </div>
+
+    <div class="toc">
+        <h2>📑 Table of Contents</h2>
+        <ul>
+            <li><a href="#section-1">1. Product Overview</a></li>
+            <li><a href="#section-2">2. Problem Statement</a></li>
+            <li><a href="#section-3">3. Product Goals & Success Metrics</a></li>
+            <li><a href="#section-4">4. Core Features & Requirements</a></li>
+            <li><a href="#section-5">5. Non-Functional Requirements</a></li>
+            <li><a href="#section-6">6. Technical Architecture</a></li>
+            <li><a href="#section-7">7. User Flows</a></li>
+            <li><a href="#section-8">8. Future Enhancements</a></li>
+            <li><a href="#section-9">9. Risks & Mitigation</a></li>
+            <li><a href="#section-10">10. Success Metrics & Analytics</a></li>
+            <li><a href="#section-11">11. Compliance & Legal</a></li>
+            <li><a href="#section-12">12. Go-to-Market Strategy</a></li>
+        </ul>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <h1 id="section-1">1. Product Overview</h1>
+
+    <h2>1.1 Product Name</h2>
+    <p><strong>SwasthyaSaathi AI Health Assistant</strong></p>
+
+    <h2>1.2 Product Vision</h2>
+    <p>An intelligent, conversational AI health assistant that provides personalized symptom assessment, natural remedy recommendations, and appropriate medical guidance through an intuitive chat interface, making quality healthcare accessible to all Indian users.</p>
+
+    <h2>1.3 Product Mission</h2>
+    <p>To democratize healthcare access by providing instant, accurate, and culturally-relevant medical guidance through AI-powered symptom analysis, prioritizing natural remedies while ensuring timely medical intervention when necessary.</p>
+
+    <h2>1.4 Target Users</h2>
+    <ul>
+        <li><strong>Primary:</strong> Indian patients (18-65 years) seeking initial health guidance</li>
+        <li><strong>Secondary:</strong> Caregivers managing family health</li>
+        <li><strong>Tertiary:</strong> Rural/semi-urban populations with limited healthcare access</li>
+    </ul>
+
+    <div class="section-divider"></div>
+
+    <h1 id="section-2">2. Problem Statement</h1>
+
+    <h2>2.1 Current Challenges</h2>
+    <ol>
+        <li><strong>Limited Access:</strong> Many Indians lack immediate access to medical professionals</li>
+        <li><strong>Cost Barriers:</strong> Initial consultation fees deter early medical intervention</li>
+        <li><strong>Information Overload:</strong> Generic online symptom checkers provide overwhelming, often irrelevant information</li>
+        <li><strong>Cultural Gap:</strong> Western-focused health apps ignore traditional Indian remedies and practices</li>
+        <li><strong>Triage Inefficiency:</strong> Emergency cases often delayed due to lack of initial assessment</li>
+    </ol>
+
+    <h2>2.2 User Pain Points</h2>
+    <div class="warning-box">
+        <ul>
+            <li>"I don't know if my symptoms are serious enough to visit a doctor"</li>
+            <li>"I want natural home remedies before trying medications"</li>
+            <li>"Online symptom checkers ask too many irrelevant questions"</li>
+            <li>"I can't afford consultation fees for minor issues"</li>
+            <li>"I need quick guidance in emergency situations"</li>
+        </ul>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <h1 id="section-3">3. Product Goals & Success Metrics</h1>
+
+    <h2>3.1 Business Goals</h2>
+    <ol>
+        <li>Reduce unnecessary doctor visits by 30% through accurate self-care guidance</li>
+        <li>Identify 95%+ of emergency cases within first 3 questions</li>
+        <li>Achieve 80%+ user satisfaction in symptom assessment accuracy</li>
+        <li>Enable 100,000+ symptom assessments in first 6 months</li>
+    </ol>
+
+    <h2>3.2 Key Performance Indicators (KPIs)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Metric</th>
+                <th>Target</th>
+                <th>Measurement Method</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>User Engagement</strong></td>
+                <td>70% completion rate</td>
+                <td>Sessions completed / Sessions started</td>
+            </tr>
+            <tr>
+                <td><strong>Accuracy</strong></td>
+                <td>85% user agreement</td>
+                <td>Post-assessment feedback surveys</td>
+            </tr>
+            <tr>
+                <td><strong>Response Time</strong></td>
+                <td>&lt;2s per AI response</td>
+                <td>Backend API latency monitoring</td>
+            </tr>
+            <tr>
+                <td><strong>Emergency Detection</strong></td>
+                <td>98% sensitivity</td>
+                <td>False negative tracking</td>
+            </tr>
+            <tr>
+                <td><strong>User Satisfaction</strong></td>
+                <td>4.2+/5.0 rating</td>
+                <td>In-app rating after assessment</td>
+            </tr>
+            <tr>
+                <td><strong>Natural Remedy Adoption</strong></td>
+                <td>60% users try remedies</td>
+                <td>Follow-up surveys (7-day)</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="section-divider"></div>
+
+    <h1 id="section-4">4. Core Features & Requirements</h1>
+
+    <h2>4.1 Feature: Conversational Symptom Assessment</h2>
+
+    <h3>4.1.1 User Stories</h3>
+    <div class="info-box">
+        <p><strong>As a patient</strong>, I want to describe my symptoms in natural language so that I don't have to navigate complex medical forms.</p>
+        <p><strong>As a patient</strong>, I want the AI to ask only relevant follow-up questions so that I can get quick results without frustration.</p>
+        <p><strong>As a patient with severe symptoms</strong>, I want immediate emergency alerts so that I can seek urgent care without delay.</p>
+    </div>
+
+    <h3>4.1.2 Functional Requirements</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Requirement</th>
+                <th>Priority</th>
+                <th>Acceptance Criteria</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>FR-1.1</td>
+                <td>Single text input for symptom description</td>
+                <td><span class="priority-p0">P0</span></td>
+                <td>User can type symptoms in free text; no mode selection required</td>
+            </tr>
+            <tr>
+                <td>FR-1.2</td>
+                <td>AI asks 3-6 contextual follow-up questions</td>
+                <td><span class="priority-p0">P0</span></td>
+                <td>Question count: 3 min, 6 max; questions adapt to previous answers</td>
+            </tr>
+            <tr>
+                <td>FR-1.3</td>
+                <td>Real-time typing indicator during AI processing</td>
+                <td><span class="priority-p1">P1</span></td>
+                <td>"AI is thinking..." shown while waiting for response (&lt;2s)</td>
+            </tr>
+            <tr>
+                <td>FR-1.4</td>
+                <td>Conversation progress tracking</td>
+                <td><span class="priority-p1">P1</span></td>
+                <td>Progress bar shows question count (e.g., "Question 2 of 6")</td>
+            </tr>
+            <tr>
+                <td>FR-1.5</td>
+                <td>Symptom-specific question trees</td>
+                <td><span class="priority-p0">P0</span></td>
+                <td>Headache → location, onset, severity; Fever → duration, pattern, chills</td>
+            </tr>
+            <tr>
+                <td>FR-1.6</td>
+                <td>Emergency keyword detection</td>
+                <td><span class="priority-p0">P0</span></td>
+                <td>"Chest pain", "can't breathe" → Immediate escalation within 1 question</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>4.2 Feature: Intelligent Triage & Classification</h2>
+
+    <h3>4.2.1 Severity Classification</h3>
+    <div class="card">
+        <h4 class="severity-mild">✅ MILD (Green)</h4>
+        <ul>
+            <li>No red flags detected</li>
+            <li>Symptoms &lt;3 days duration</li>
+            <li>Vitals within normal range</li>
+            <li>Self-care appropriate</li>
+            <li><strong>Examples:</strong> Common cold, minor headache, mild muscle pain</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h4 class="severity-moderate">⚠️ MODERATE (Yellow)</h4>
+        <ul>
+            <li>Some concerning symptoms but not life-threatening</li>
+            <li>Symptoms 3-7 days duration</li>
+            <li>Vitals slightly abnormal</li>
+            <li>Doctor consultation recommended within 24-48 hours</li>
+            <li><strong>Examples:</strong> High fever &gt;3 days, persistent cough, severe headache</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h4 class="severity-emergency">🚨 EMERGENCY (Red)</h4>
+        <ul>
+            <li>Red flag symptoms present</li>
+            <li>Requires urgent medical attention</li>
+            <li>Doctor consultation within 2-6 hours</li>
+            <li><strong>Examples:</strong> Chest pain, severe abdominal pain, high fever with confusion</li>
+        </ul>
+    </div>
+
+    <h3>4.2.2 Red Flag Detection Matrix</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Symptom Category</th>
+                <th>Red Flags</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Chest Pain</strong></td>
+                <td>Radiation to arm/jaw, sweating, shortness of breath, family history</td>
+                <td>CRITICAL → Alert emergency doctor</td>
+            </tr>
+            <tr>
+                <td><strong>Headache</strong></td>
+                <td>"Worst headache ever", sudden onset, neck stiffness, fever, vision loss</td>
+                <td>EMERGENCY → Urgent doctor needed</td>
+            </tr>
+            <tr>
+                <td><strong>Abdominal Pain</strong></td>
+                <td>Severe pain &gt;6 hours, blood in stool, rigid abdomen, pregnancy</td>
+                <td>EMERGENCY → Hospital visit required</td>
+            </tr>
+            <tr>
+                <td><strong>Fever</strong></td>
+                <td>&gt;104°F (40°C), confusion, seizures, unresponsive, neck stiffness</td>
+                <td>EMERGENCY → Immediate care</td>
+            </tr>
+            <tr>
+                <td><strong>Breathing</strong></td>
+                <td>Can't complete sentences, blue lips/nails, wheezing, SpO2 &lt;90%</td>
+                <td>CRITICAL → Call ambulance</td>
+            </tr>
+            <tr>
+                <td><strong>Neurological</strong></td>
+                <td>Facial drooping, arm weakness, speech difficulty (FAST stroke signs)</td>
+                <td>CRITICAL → Call ambulance immediately</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>4.3 Feature: Natural Remedy Recommendations</h2>
+
+    <h3>4.3.1 Natural Remedy Database (21 Remedies)</h3>
+
+    <div class="success-box">
+        <h4>🍵 Cold/Flu Category</h4>
+        <ul>
+            <li>Ginger tea with honey (anti-inflammatory, soothes throat)</li>
+            <li>Warm salt water gargle (reduces throat inflammation)</li>
+            <li>Tulsi (holy basil) tea (immune booster, traditional Ayurvedic)</li>
+            <li>Honey + lemon in warm water (vitamin C, antibacterial)</li>
+        </ul>
+
+        <h4>🧊 Headache Category</h4>
+        <ul>
+            <li>Caffeine + rest (migraine relief)</li>
+            <li>Cold compress on forehead (reduces inflammation)</li>
+            <li>Gentle head massage (tension relief)</li>
+            <li>Rest in dark, quiet room (sensory reduction)</li>
+        </ul>
+
+        <h4>🫚 Digestive Category</h4>
+        <ul>
+            <li>Ginger for nausea (traditional remedy)</li>
+            <li>Peppermint tea (IBS, bloating)</li>
+            <li>Buttermilk (probiotics, cooling)</li>
+            <li>BRAT diet: Banana, Rice, Applesauce, Toast</li>
+        </ul>
+
+        <h4>🛁 Fever Category</h4>
+        <ul>
+            <li>Lukewarm bath/sponge (body cooling)</li>
+            <li>Extra hydration: 8-10 glasses water</li>
+            <li>Tulsi + ginger tea (antipyretic properties)</li>
+            <li>Cold compress on forehead</li>
+        </ul>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <h1 id="section-5">5. Non-Functional Requirements</h1>
+
+    <h2>5.1 Performance Requirements</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Requirement</th>
+                <th>Target</th>
+                <th>Measurement</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>API Response Time</strong></td>
+                <td>&lt;2 seconds per message</td>
+                <td>95th percentile</td>
+            </tr>
+            <tr>
+                <td><strong>Page Load Time</strong></td>
+                <td>&lt;1 second</td>
+                <td>Initial render</td>
+            </tr>
+            <tr>
+                <td><strong>Concurrent Users</strong></td>
+                <td>1,000 simultaneous sessions</td>
+                <td>Load testing</td>
+            </tr>
+            <tr>
+                <td><strong>Database Query Time</strong></td>
+                <td>&lt;100ms per query</td>
+                <td>Monitoring</td>
+            </tr>
+            <tr>
+                <td><strong>Gemini API Timeout</strong></td>
+                <td>5 seconds with fallback</td>
+                <td>Graceful degradation</td>
+            </tr>
+            <tr>
+                <td><strong>App Launch Time</strong></td>
+                <td>&lt;3 seconds cold start</td>
+                <td>Device testing</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>5.2 Security Requirements</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Area</th>
+                <th>Requirement</th>
+                <th>Implementation</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Authentication</strong></td>
+                <td>JWT tokens with 24-hour expiry</td>
+                <td>HS256 algorithm, secure secret keys</td>
+            </tr>
+            <tr>
+                <td><strong>Data Encryption</strong></td>
+                <td>All patient data encrypted at rest</td>
+                <td>AES-256 encryption</td>
+            </tr>
+            <tr>
+                <td><strong>API Security</strong></td>
+                <td>Rate limiting: 100 requests/minute/user</td>
+                <td>Backend middleware</td>
+            </tr>
+            <tr>
+                <td><strong>HTTPS</strong></td>
+                <td>All production traffic over TLS 1.3</td>
+                <td>SSL certificate required</td>
+            </tr>
+            <tr>
+                <td><strong>Privacy</strong></td>
+                <td>HIPAA/GDPR compliance for health data</td>
+                <td>Data anonymization, consent forms</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="section-divider"></div>
+
+    <h1 id="section-6">6. Technical Architecture</h1>
+
+    <h2>6.1 Technology Stack</h2>
+
+    <div class="card">
+        <h3>Frontend (Mobile App)</h3>
+        <ul>
+            <li><strong>Framework:</strong> React Native 0.72+ with Expo SDK 49+</li>
+            <li><strong>Language:</strong> TypeScript 5.0+</li>
+            <li><strong>State Management:</strong> React Context API + AsyncStorage</li>
+            <li><strong>Navigation:</strong> React Navigation 6.x</li>
+            <li><strong>UI Library:</strong> React Native Paper (Material Design)</li>
+            <li><strong>HTTP Client:</strong> Axios with retry logic</li>
+            <li><strong>Storage:</strong> Expo SecureStore for JWT tokens</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h3>Backend (API Server)</h3>
+        <ul>
+            <li><strong>Framework:</strong> FastAPI 0.104+ (Python 3.11+)</li>
+            <li><strong>Database:</strong> SQLite (development), PostgreSQL (production)</li>
+            <li><strong>ORM:</strong> SQLAlchemy 2.0 with Alembic migrations</li>
+            <li><strong>Authentication:</strong> JWT (PyJWT library)</li>
+            <li><strong>AI Integration:</strong> Google Gemini Flash API</li>
+            <li><strong>Monitoring:</strong> Sentry for error tracking</li>
+        </ul>
+    </div>
+
+    <h2>6.2 Database Schema</h2>
+
+    <pre><code>-- Users Table
+CREATE TABLE users (
+    id UUID PRIMARY KEY,
+    phone VARCHAR(15) UNIQUE NOT NULL,
+    name VARCHAR(100),
+    email VARCHAR(100),
+    password_hash VARCHAR(255),
+    role ENUM('patient', 'doctor'),
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Consultations Table
+CREATE TABLE consultations (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id),
+    session_id UUID UNIQUE,
+    started_at TIMESTAMP DEFAULT NOW(),
+    completed_at TIMESTAMP,
+    triage_result JSON,
+    conversation_state ENUM('chatting', 'complete')
+);
+
+-- Conversation Turns Table
+CREATE TABLE conversation_turns (
+    id UUID PRIMARY KEY,
+    consultation_id UUID REFERENCES consultations(id),
+    turn_number INT,
+    role ENUM('user', 'assistant'),
+    message TEXT,
+    timestamp TIMESTAMP DEFAULT NOW()
+);</code></pre>
+
+    <div class="section-divider"></div>
+
+    <h1 id="section-7">7. User Flows</h1>
+
+    <h2>7.1 Normal Symptom Assessment Flow</h2>
+
+    <pre><code>START: User lands on Home Screen
+  │
+  ├─► Taps "AI Health Check" button
+  │
+  ├─► Chat Screen loads (auto-focused text input)
+  │
+  ├─► Types: "I have severe headache on left side" + Send
+  │
+  ├─► Backend: Detects symptom category = "headache"
+  │
+  ├─► AI responds: "How long have you had this headache?"
+  │   (Question 1/6 shown)
+  │
+  ├─► User: "Since this morning, about 4 hours"
+  │
+  ├─► AI responds: "Is the pain constant or does it come and go?"
+  │   (Question 2/6)
+  │
+  ├─► ... (3-6 total questions)
+  │
+  ├─► Backend: Completes triage
+  │   Classification: MODERATE (migraine)
+  │   Confidence: 82%
+  │
+  ├─► Auto-navigate to DoctorNeededDashboard
+  │
+  ├─► Shows:
+  │   • Risk: Moderate - Doctor recommended within 24hrs
+  │   • Natural Remedies: Rest in dark room, cold compress
+  │   • OTC Meds: Ibuprofen 400mg with food
+  │   • Connect to Doctor: [Shows 3 available doctors]
+  │
+  └─► User selects doctor or saves record
+
+END</code></pre>
+
+    <h2>7.2 Emergency Case Flow (Fast-Track)</h2>
+
+    <pre><code>START: User describes chest pain
+  │
+  ├─► "I have severe chest pain spreading to my left arm"
+  │
+  ├─► Backend: Detects emergency keywords
+  │
+  ├─► AI: "This could be serious. Do you have shortness 
+  │        of breath or sweating?" (Only 1 verification question)
+  │
+  ├─► User: "Yes, I'm sweating a lot"
+  │
+  ├─► Backend: Confirms CRITICAL emergency
+  │
+  ├─► IMMEDIATE auto-navigate to EmergencyDashboard (within 30 seconds)
+  │
+  ├─► Shows:
+  │   • 🚨 EMERGENCY banner (flashing red)
+  │   • "Call Ambulance: 108" button (largest)
+  │   • "Alert Emergency Doctor" button (auto-clicked)
+  │   • Do NOT: Drive yourself, eat/drink
+  │   • While You Wait: Sit upright, loosen clothing
+  │
+  ├─► Emergency alert sent to all available doctors
+  │
+  └─► User waits with first-aid instructions visible
+
+END (Emergency services engaged within 2 minutes)</code></pre>
+
+    <div class="section-divider"></div>
+
+    <h1 id="section-8">8. Future Enhancements</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Feature</th>
+                <th>Priority</th>
+                <th>Timeline</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Voice Input</strong></td>
+                <td>P1</td>
+                <td>Q3 2026</td>
+                <td>Speech-to-text for hands-free symptom description</td>
+            </tr>
+            <tr>
+                <td><strong>Multi-Language Support</strong></td>
+                <td>P1</td>
+                <td>Q4 2026</td>
+                <td>Hindi, Tamil, Telugu, Bengali, Marathi</td>
+            </tr>
+            <tr>
+                <td><strong>Telemedicine Integration</strong></td>
+                <td>P1</td>
+                <td>Q1 2027</td>
+                <td>In-app video/audio calls with doctors</td>
+            </tr>
+            <tr>
+                <td><strong>Prescription Tracking</strong></td>
+                <td>P2</td>
+                <td>Q2 2027</td>
+                <td>OCR scanning + medication reminders</td>
+            </tr>
+            <tr>
+                <td><strong>Health Insights</strong></td>
+                <td>P2</td>
+                <td>Q3 2027</td>
+                <td>Weekly reports + trend analysis</td>
+            </tr>
+            <tr>
+                <td><strong>Family Profiles</strong></td>
+                <td>P2</td>
+                <td>Q4 2027</td>
+                <td>Manage health for spouse, children, parents</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="section-divider"></div>
+
+    <h1 id="section-9">9. Risks & Mitigation</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Risk</th>
+                <th>Severity</th>
+                <th>Likelihood</th>
+                <th>Mitigation</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>AI provides incorrect medical advice</td>
+                <td>CRITICAL</td>
+                <td>Medium</td>
+                <td>
+                    ✅ Disclaimers<br>
+                    ✅ Confidence scores<br>
+                    ✅ Err on side of caution<br>
+                    ✅ Medical board reviews
+                </td>
+            </tr>
+            <tr>
+                <td>Gemini API quota/outage</td>
+                <td>High</td>
+                <td>Medium</td>
+                <td>
+                    ✅ Local fallback analyzer<br>
+                    ✅ API usage monitoring<br>
+                    ✅ Paid tier for production<br>
+                    ✅ Response caching
+                </td>
+            </tr>
+            <tr>
+                <td>Data privacy breach</td>
+                <td>CRITICAL</td>
+                <td>Low</td>
+                <td>
+                    ✅ AES-256 encryption<br>
+                    ✅ HTTPS/TLS<br>
+                    ✅ GDPR/HIPAA compliance<br>
+                    ✅ Penetration testing
+                </td>
+            </tr>
+            <tr>
+                <td>Emergency case delayed</td>
+                <td>CRITICAL</td>
+                <td>Low</td>
+                <td>
+                    ✅ Keyword-triggered escalation<br>
+                    ✅ 30-second timeout<br>
+                    ✅ Bypass Q&A for life-threatening<br>
+                    ✅ Direct ambulance button
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="section-divider"></div>
+
+    <h1 id="section-10">10. Success Metrics & Analytics</h1>
+
+    <h2>10.1 Key Metrics Dashboard</h2>
+
+    <div class="card">
+        <h3>User Engagement Metrics</h3>
+        <ul>
+            <li>Daily Active Users (DAU)</li>
+            <li>Session completion rate (target: 70%)</li>
+            <li>Average questions per session (target: 4-5)</li>
+            <li>Time to complete assessment (target: 2-3 minutes)</li>
+            <li>Return user rate within 30 days</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h3>Medical Accuracy Metrics</h3>
+        <ul>
+            <li>User satisfaction score (post-assessment survey)</li>
+            <li>False negative rate for emergencies (target: &lt;2%)</li>
+            <li>Triage accuracy vs. doctor diagnosis</li>
+            <li>Natural remedy adoption rate (target: 60%)</li>
+            <li>Doctor consultation rate by severity</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h3>Technical Performance Metrics</h3>
+        <ul>
+            <li>API response time (p50, p95, p99)</li>
+            <li>Error rate (target: &lt;1%)</li>
+            <li>Gemini API failure rate + fallback usage</li>
+            <li>App crash rate (target: &lt;0.1%)</li>
+            <li>Backend uptime (target: 99.5%)</li>
+        </ul>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <h1 id="section-11">11. Compliance & Legal</h1>
+
+    <h2>11.1 Regulatory Compliance</h2>
+
+    <div class="warning-box">
+        <h3>India</h3>
+        <ul>
+            <li><strong>DISHA:</strong> Digital Information Security in Healthcare Act</li>
+            <li><strong>Telemedicine Guidelines (2020):</strong> MCI regulations</li>
+            <li><strong>IT Act 2000:</strong> Data protection and cybersecurity</li>
+        </ul>
+
+        <h3>International (if expanding)</h3>
+        <ul>
+            <li><strong>HIPAA (USA):</strong> Health Insurance Portability and Accountability Act</li>
+            <li><strong>GDPR (EU):</strong> General Data Protection Regulation</li>
+        </ul>
+    </div>
+
+    <h2>11.2 Mandatory Disclaimers</h2>
+
+    <div class="warning-box">
+        <ol>
+            <li>"This AI assistant is not a substitute for professional medical advice, diagnosis, or treatment."</li>
+            <li>"Always seek the advice of your physician or qualified health provider with any questions."</li>
+            <li>"If you think you have a medical emergency, call your doctor or emergency services immediately."</li>
+            <li>"Do not rely solely on information provided by this AI for medical decisions."</li>
+        </ol>
+
+        <h4>User Consent Requirements:</h4>
+        <ul>
+            <li>☑ I understand this is an AI assistant, not a licensed doctor</li>
+            <li>☑ I consent to my health data being stored securely</li>
+            <li>☑ I agree to Terms of Service and Privacy Policy</li>
+        </ul>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <h1 id="section-12">12. Go-to-Market Strategy</h1>
+
+    <h2>12.1 Launch Plan</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Phase</th>
+                <th>Timeline</th>
+                <th>Activities</th>
+                <th>Target</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Phase 1: Soft Launch</strong></td>
+                <td>Month 1-2</td>
+                <td>
+                    • 500 beta users in Bangalore<br>
+                    • Collect feedback<br>
+                    • Refine AI prompts
+                </td>
+                <td>500 users, 80% satisfaction</td>
+            </tr>
+            <tr>
+                <td><strong>Phase 2: Regional Launch</strong></td>
+                <td>Month 3-4</td>
+                <td>
+                    • Launch in Karnataka (10M+ users)<br>
+                    • Partner with local hospitals<br>
+                    • Facebook/Instagram ads
+                </td>
+                <td>10,000 users, 70% completion</td>
+            </tr>
+            <tr>
+                <td><strong>Phase 3: National Expansion</strong></td>
+                <td>Month 5-6</td>
+                <td>
+                    • Major metros rollout<br>
+                    • Multi-language support<br>
+                    • Government partnerships
+                </td>
+                <td>100,000 users, 99.5% uptime</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>12.2 Monetization Strategy</h2>
+
+    <div class="card">
+        <h3>Year 1: Free for All</h3>
+        <p>Focus on user growth and data collection. No ads, no paywalls. Goal: 1M+ users</p>
+    </div>
+
+    <div class="card">
+        <h3>Year 2: Freemium Model</h3>
+        <p><strong>Free Tier:</strong> Unlimited assessments, basic remedies</p>
+        <p><strong>Premium Tier (₹99/month):</strong></p>
+        <ul>
+            <li>Priority doctor connection</li>
+            <li>Detailed health reports</li>
+            <li>Medication reminders</li>
+            <li>Family health profiles (up to 5 members)</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h3>Year 3: B2B Partnerships</h3>
+        <ul>
+            <li><strong>Hospitals:</strong> ₹5/consultation white-labeled tool</li>
+            <li><strong>Corporates:</strong> ₹50/employee/year wellness platform</li>
+            <li><strong>Insurance:</strong> Preventive care program partnerships</li>
+        </ul>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <div class="info-box">
+        <h2>📝 Document Status</h2>
+        <p><strong>Version:</strong> 1.0</p>
+        <p><strong>Date:</strong> March 5, 2026</p>
+        <p><strong>Status:</strong> ✅ Working Prototype → Production Ready</p>
+        <p><strong>Next Review:</strong> Post-beta feedback (TBD)</p>
+        
+        <h3 style="margin-top: 20px;">Sign-Off</h3>
+        <table style="margin-top: 10px;">
+            <tr>
+                <td><strong>Prepared By:</strong></td>
+                <td>Product Manager</td>
+                <td>Date: March 5, 2026</td>
+            </tr>
+            <tr>
+                <td><strong>Reviewed By:</strong></td>
+                <td>Engineering Lead, Medical Advisor</td>
+                <td>Date: Pending</td>
+            </tr>
+            <tr>
+                <td><strong>Approved By:</strong></td>
+                <td>CEO/Founder</td>
+                <td>Date: Pending</td>
+            </tr>
+        </table>
+    </div>
+
+    <div style="text-align: center; margin-top: 60px; padding: 30px; background: #f9f9f9; border-radius: 10px;">
+        <h2 style="color: #007AFF;">🏥 SwasthyaSaathi</h2>
+        <p style="font-style: italic; color: #666;">Making Quality Healthcare Accessible to Every Indian</p>
+        <p style="margin-top: 20px; font-size: 14px; color: #888;">
+            This PRD is a living document and will be updated based on user feedback,<br>
+            technical constraints, and regulatory changes.
+        </p>
+    </div>
+</body>
+</html>
