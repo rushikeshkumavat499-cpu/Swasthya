@@ -1,10 +1,12 @@
 """
 Conversational AI Symptom Agent.
-Manages multi-turn symptom interviews using Gemini AI
-with structured question trees and real-time red flag detection.
+Manages multi-turn symptom interviews using LangGraph AI Agent pipeline
+with DistilBERT emergency classification, Gemini AI analysis,
+structured question trees, and real-time red flag detection.
 """
 
 import json
+import logging
 import re
 from typing import Optional
 
@@ -25,7 +27,13 @@ from app.services.symptom_questionnaires import (
     get_progress_percentage,
     GENERIC_QUESTIONS,
 )
+from app.agents.graph import (
+    run_initial_assessment,
+    run_follow_up,
+    run_complete_assessment,
+)
 
+logger = logging.getLogger(__name__)
 genai.configure(api_key=settings.GEMINI_API_KEY)
 
 
@@ -262,73 +270,70 @@ def start_interview(
     db: Session,
 ) -> dict:
     """
-    Start a symptom interview. Analyzes the initial message,
-    identifies symptoms, and asks the first targeted question.
+    Start a symptom interview using the LangGraph AI Agent pipeline.
+    Runs the graph: collect_symptoms → (emergency check via DistilBERT)
     """
-    model = _get_model()
+    logger.info(f"Starting LangGraph interview for session {session.id}")
 
-    # Step 1: Analyze initial message with Gemini
-    prompt = INITIAL_ANALYSIS_PROMPT.format(message=initial_message)
+    # ── Run LangGraph agent pipeline ──────────────────────
     try:
-        response = model.generate_content(prompt)
-        analysis = json.loads(_clean_json_response(response.text))
-    except (json.JSONDecodeError, Exception):
-        analysis = {
-            "identified_symptoms": [initial_message],
-            "primary_category": identify_symptom_category(initial_message),
+        graph_result = run_initial_assessment(initial_message)
+        logger.info(
+            f"LangGraph result: severity={graph_result.get('severity')}, "
+            f"emergency={graph_result.get('is_emergency')}, "
+            f"distilbert={graph_result.get('distilbert_score', 0):.2f}"
+        )
+    except Exception as e:
+        logger.error(f"LangGraph pipeline failed, falling back: {e}")
+        # Fallback to basic analysis if graph fails
+        graph_result = {
+            "agent_response": "I understand you're not feeling well. Can you tell me more about your symptoms?",
             "is_emergency": False,
-            "empathetic_response": "I understand you're not feeling well. Let me ask you some questions to better understand your symptoms.",
-            "needs_clarification": False,
+            "category": identify_symptom_category(initial_message),
+            "identified_symptoms": [initial_message],
+            "questions_asked": [],
+            "current_question_index": 0,
+            "extracted_data": {"initial_description": initial_message},
+            "red_flags": [],
+            "total_questions": 0,
         }
 
-    # Step 2: Also do local keyword matching for category
-    local_category = identify_symptom_category(initial_message)
-    ai_category = analysis.get("primary_category")
-    category = ai_category if ai_category and ai_category != "null" else local_category
+    # ── Extract results from graph ────────────────────────
+    category = graph_result.get("category")
+    agent_message = graph_result.get("agent_response", "")
+    is_emergency = graph_result.get("is_emergency", False)
+    identified_symptoms = graph_result.get("identified_symptoms", [])
 
-    # Step 3: Check for immediate red flags
-    red_flags = check_red_flags(category, initial_message) if category else []
-    is_emergency = analysis.get("is_emergency", False) or len(red_flags) > 0
-
-    # Step 4: Build context
-    context = {
-        "primary_category": category,
-        "identified_symptoms": analysis.get("identified_symptoms", []),
-        "answered_questions": [],
-        "extracted_data": {"initial_description": initial_message},
-        "red_flags": [f["condition"] for f in red_flags],
-        "current_question_index": 0,
-    }
-
-    # Step 5: Get the first question
+    # Get question info for the response
     questions = get_questions_for_category(category) if category else GENERIC_QUESTIONS
     first_question = questions[0] if questions else GENERIC_QUESTIONS[0]
 
-    # Step 6: Generate natural response
-    empathetic = analysis.get("empathetic_response", "I understand you're not feeling well.")
-    
-    if is_emergency:
-        agent_message = (
-            f"⚠️ {empathetic} Based on what you've described, this could be serious. "
-            f"Please seek immediate medical attention or call emergency services. "
-            f"While you do that, let me ask a few quick questions. {first_question['text']}"
-        )
-    else:
-        # Make the first question natural using Gemini
-        try:
-            q_prompt = NATURAL_QUESTION_PROMPT.format(
-                category=category or "general",
-                structured_question=first_question["text"],
-                conversation_history=f"Patient: {initial_message}",
-            )
-            q_response = model.generate_content(q_prompt)
-            natural_question = q_response.text.strip()
-        except Exception:
-            natural_question = first_question["text"]
+    # ── Build context (includes LangGraph agent state) ────
+    context = {
+        "primary_category": category,
+        "identified_symptoms": identified_symptoms,
+        "answered_questions": graph_result.get("questions_asked", []),
+        "extracted_data": graph_result.get("extracted_data", {"initial_description": initial_message}),
+        "red_flags": graph_result.get("red_flags", []),
+        "current_question_index": graph_result.get("current_question_index", 0),
+        # LangGraph-specific state for follow-up calls
+        "agent_state": {
+            "initial_message": initial_message,
+            "category": category,
+            "identified_symptoms": identified_symptoms,
+            "questions_asked": graph_result.get("questions_asked", []),
+            "current_question_index": graph_result.get("current_question_index", 0),
+            "extracted_data": graph_result.get("extracted_data", {}),
+            "red_flags": graph_result.get("red_flags", []),
+            "is_emergency": is_emergency,
+            "severity": graph_result.get("severity"),
+            "distilbert_score": graph_result.get("distilbert_score", 0.0),
+            "total_questions": graph_result.get("total_questions", 0),
+            "conversation_history": [],
+        },
+    }
 
-        agent_message = f"{empathetic} {natural_question}"
-
-    # Step 7: Save turn
+    # ── Save turn to DB ───────────────────────────────────
     turn = ConversationTurn(
         consultation_id=session.id,
         turn_number=1,
@@ -338,16 +343,15 @@ def start_interview(
         symptom_category=category,
         extracted_data=json.dumps({
             "question_key": first_question["key"],
-            "initial_analysis": analysis.get("identified_symptoms", []),
+            "initial_analysis": identified_symptoms,
         }),
     )
     db.add(turn)
 
-    # Step 8: Update session state
+    # Update session state
     session.conversation_state = STATE_COLLECTING
-    context["current_question_index"] = 0
     _save_context(session, context, db)
-    
+
     # Save initial symptom log
     symptom_log = SymptomLog(
         consultation_id=session.id,
@@ -367,9 +371,9 @@ def start_interview(
         "turn_number": 1,
         "question_type": first_question.get("type", "initial"),
         "options": _extract_question_options(first_question),
-        "symptoms_identified": analysis.get("identified_symptoms", []),
+        "symptoms_identified": identified_symptoms,
         "is_emergency": is_emergency,
-        "emergency_message": red_flags[0]["condition"] if red_flags else None,
+        "emergency_message": graph_result.get("emergency_reason"),
         "progress_pct": progress,
     }
 
@@ -380,151 +384,98 @@ def process_response(
     db: Session,
 ) -> dict:
     """
-    Process a patient's response, extract data, check for red flags,
-    and determine the next question to ask.
+    Process a patient's response using the LangGraph AI Agent pipeline.
+    The graph handles: question flow, red flag detection (DistilBERT),
+    and routing to analysis/emergency when all questions are done.
     """
-    model = _get_model()
     context = _get_context(session)
     category = context.get("primary_category")
-    
+
     # Get current turn number
     current_turns = len(session.conversation_turns)
     new_turn_number = current_turns + 1
 
-    # Get the last turn to know what question was asked
-    last_turn = max(session.conversation_turns, key=lambda t: t.turn_number) if session.conversation_turns else None
-    
     # Update the last turn with patient's response
+    last_turn = max(session.conversation_turns, key=lambda t: t.turn_number) if session.conversation_turns else None
     if last_turn and not last_turn.patient_response:
         last_turn.patient_response = patient_message
         db.commit()
 
-    # Step 1: Check red flags in response
-    red_flags = check_red_flags(category, patient_message) if category else []
-    is_emergency = len(red_flags) > 0
+    # ── Build conversation history for the graph ──────────
+    conv_history = []
+    turns = sorted(session.conversation_turns, key=lambda t: t.turn_number)
+    for t in turns[-6:]:
+        conv_history.append({"role": "assistant", "content": t.agent_question})
+        if t.patient_response:
+            conv_history.append({"role": "user", "content": t.patient_response})
 
-    # Step 2: Analyze response with Gemini
-    conversation_history = _get_conversation_history(session)
-    
-    last_question = last_turn.agent_question if last_turn else ""
-    last_question_type = last_turn.question_type if last_turn else ""
-    
-    # Extract the question key from last turn's extracted_data
-    last_question_key = None
-    if last_turn and last_turn.extracted_data:
-        try:
-            ld = json.loads(last_turn.extracted_data)
-            last_question_key = ld.get("question_key")
-        except (json.JSONDecodeError, TypeError):
-            pass
+    # ── Rebuild agent state from session context ──────────
+    agent_state = context.get("agent_state", {})
+    agent_state["conversation_history"] = conv_history
 
-    analysis_prompt = RESPONSE_ANALYSIS_PROMPT.format(
-        category=category or "general",
-        question=last_question,
-        question_type=last_question_type,
-        response=patient_message,
-        conversation_history=conversation_history,
-    )
-
+    # ── Run LangGraph agent pipeline ─────────────────────
     try:
-        response = model.generate_content(analysis_prompt)
-        analysis = json.loads(_clean_json_response(response.text))
-    except (json.JSONDecodeError, Exception):
-        analysis = {
-            "extracted_value": patient_message,
-            "is_clear": True,
-            "needs_clarification": False,
-            "red_flags_detected": [],
-            "is_emergency": is_emergency,
-            "additional_symptoms_mentioned": [],
-            "empathetic_transition": "Thank you for sharing that.",
+        graph_result = run_follow_up(patient_message, agent_state)
+        logger.info(
+            f"LangGraph follow-up: next_step={graph_result.get('next_step')}, "
+            f"emergency={graph_result.get('is_emergency')}"
+        )
+    except Exception as e:
+        logger.error(f"LangGraph follow-up failed, falling back: {e}")
+        # Fallback response
+        graph_result = {
+            "agent_response": "Thank you for sharing that. Can you tell me more about your symptoms?",
+            "is_emergency": False,
+            "next_step": "collect",
+            "questions_asked": agent_state.get("questions_asked", []),
+            "current_question_index": agent_state.get("current_question_index", 0),
+            "extracted_data": agent_state.get("extracted_data", {}),
+            "red_flags": agent_state.get("red_flags", []),
         }
 
-    # Check if AI detected emergency
-    if analysis.get("is_emergency"):
-        is_emergency = True
+    # ── Extract results ───────────────────────────────────
+    agent_message = graph_result.get("agent_response", "")
+    is_emergency = graph_result.get("is_emergency", False)
+    next_step = graph_result.get("next_step", "collect")
 
-    # Step 3: Update context with extracted data
-    if last_question_key:
-        context["extracted_data"][last_question_key] = analysis.get("extracted_value", patient_message)
-        if last_question_key not in context["answered_questions"]:
-            context["answered_questions"].append(last_question_key)
-
-    # Update red flags
-    for rf in analysis.get("red_flags_detected", []):
-        if rf not in context["red_flags"]:
-            context["red_flags"].append(rf)
-    for rf in red_flags:
-        if rf["condition"] not in context["red_flags"]:
-            context["red_flags"].append(rf["condition"])
-
-    # Step 4: Determine next question
-    questions = get_questions_for_category(category) if category else GENERIC_QUESTIONS
-    answered = context.get("answered_questions", [])
-    
-    # Find next unanswered question
-    next_question = None
-    next_index = context.get("current_question_index", 0) + 1
-    
-    for i in range(next_index, len(questions)):
-        q = questions[i]
-        if q["key"] not in answered:
-            next_question = q
-            context["current_question_index"] = i
-            break
-
-    # Step 5: Check if we need clarification
-    next_options = None                           # populated per branch below
-    if analysis.get("needs_clarification") and not analysis.get("is_clear", True):
-        clarification = analysis.get("clarification_question", "Could you explain that a bit more?")
-        agent_message = f"{analysis.get('empathetic_transition', '')} {clarification}"
-        question_type = "clarification"
-        question_key = last_question_key  # Re-ask same key
-        conversation_state = STATE_CLARIFYING
-        next_options = None                       # free-text for clarifications
-    elif next_question is None:
-        # All questions asked — interview complete
-        agent_message = (
-            f"{analysis.get('empathetic_transition', 'Thank you.')} "
-            f"I have collected all the necessary information about your symptoms. "
-            f"Let me now analyze everything and provide you with guidance."
-        )
-        question_type = "complete"
-        question_key = "complete"
+    # Determine conversation state
+    if next_step == "done" or next_step == "classify":
         conversation_state = STATE_COMPLETE
         session.conversation_state = STATE_COMPLETE
-        next_options = None                       # no options on completion
-    elif is_emergency:
-        agent_message = (
-            f"⚠️ Based on your response, this sounds like it could be serious. "
-            f"Please seek immediate medical attention. "
-            f"Can you quickly tell me: {next_question['text']}"
-        )
-        question_type = next_question.get("type", "question")
-        question_key = next_question["key"]
-        conversation_state = STATE_COLLECTING
-        next_options = _extract_question_options(next_question)
     else:
-        # Generate natural next question
-        try:
-            q_prompt = NATURAL_QUESTION_PROMPT.format(
-                category=category or "general",
-                structured_question=next_question["text"],
-                conversation_history=conversation_history,
-            )
-            q_response = model.generate_content(q_prompt)
-            natural_q = q_response.text.strip()
-        except Exception:
-            natural_q = next_question["text"]
-
-        transition = analysis.get("empathetic_transition", "Thank you.")
-        agent_message = f"{transition} {natural_q}"
-        question_type = next_question.get("type", "question")
-        question_key = next_question["key"]
         conversation_state = STATE_COLLECTING
-        next_options = _extract_question_options(next_question)
 
-    # Step 6: Save turn
+    # Get question info for options
+    questions = get_questions_for_category(category) if category else GENERIC_QUESTIONS
+    answered = graph_result.get("questions_asked", [])
+    q_index = graph_result.get("current_question_index", 0)
+    current_question = questions[q_index] if q_index < len(questions) else None
+
+    question_type = current_question.get("type", "question") if current_question else "complete"
+    question_key = current_question["key"] if current_question else "complete"
+    next_options = _extract_question_options(current_question) if current_question and next_step == "collect" else None
+
+    # ── Update context with LangGraph state ───────────────
+    context["answered_questions"] = answered
+    context["current_question_index"] = q_index
+    context["extracted_data"] = graph_result.get("extracted_data", context.get("extracted_data", {}))
+    context["red_flags"] = graph_result.get("red_flags", [])
+    context["agent_state"] = {
+        "initial_message": agent_state.get("initial_message", ""),
+        "category": category,
+        "identified_symptoms": graph_result.get("identified_symptoms", []),
+        "questions_asked": answered,
+        "current_question_index": q_index,
+        "extracted_data": graph_result.get("extracted_data", {}),
+        "red_flags": graph_result.get("red_flags", []),
+        "is_emergency": is_emergency,
+        "severity": graph_result.get("severity"),
+        "distilbert_score": graph_result.get("distilbert_score", 0.0),
+        "total_questions": graph_result.get("total_questions", 0),
+        "conversation_history": conv_history,
+    }
+
+    # ── Save turn to DB ───────────────────────────────────
     turn = ConversationTurn(
         consultation_id=session.id,
         turn_number=new_turn_number,
@@ -540,7 +491,7 @@ def process_response(
     db.commit()
     db.refresh(turn)
 
-    # Update symptom log with extracted data
+    # ── Update symptom log with extracted data ────────────
     symptom_logs = session.symptoms
     if symptom_logs:
         main_log = symptom_logs[0]
@@ -566,8 +517,7 @@ def process_response(
             main_log.functional_impact = str(extracted["functional"])[:200]
         if "previous" in extracted:
             main_log.previous_occurrences = str(extracted["previous"])[:200]
-        
-        # Save list fields as JSON
+
         aggravating = [v for k, v in extracted.items() if "aggravat" in k.lower() or k == "exertion"]
         if aggravating:
             main_log.aggravating_factors = json.dumps(aggravating)
@@ -592,11 +542,9 @@ def process_response(
         "turn_number": new_turn_number,
         "question_type": question_type,
         "options": next_options,
-        "symptoms_identified": context.get("identified_symptoms", []),
+        "symptoms_identified": graph_result.get("identified_symptoms", []),
         "is_emergency": is_emergency,
-        "emergency_message": red_flags[0]["condition"] if red_flags else (
-            analysis.get("emergency_reason") if analysis.get("is_emergency") else None
-        ),
+        "emergency_message": graph_result.get("emergency_reason"),
         "progress_pct": progress,
     }
 
